@@ -7,7 +7,7 @@ from logger import get_logger
 
 logger = get_logger(__name__)
 
-def index_documents(folder_path, index_name='document_index', index_path=None, indexer_model='vidore/colpali'):
+def index_documents(folder_path, index_name='document_index', index_path=None, indexer_model='vidore/colpali-v1.2'):
     """
     Indexes documents in the specified folder using Byaldi.
 

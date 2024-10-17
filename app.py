@@ -1,23 +1,35 @@
 import os
 import uuid
 import json
-import time  # Add this import at the top of the file
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_login import LoginManager, UserMixin, UserMixin, login_user, login_required, logout_user, current_user
 from markupsafe import Markup
 from models.indexer import index_documents
 from models.retriever import retrieve_documents
 from models.responder import generate_response
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from logger import get_logger
 from byaldi import RAGMultiModalModel
+from dotenv import load_dotenv
 import markdown
+
+# Load the .env file
+load_dotenv()
 
 # Set the TOKENIZERS_PARALLELISM environment variable to suppress warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Initialize the Flask application
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a secure secret key
+# **Initialize the LoginManager**
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # Specify the login route
+
+# Use the secret key from the environment
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback_secret_key')  # Replace with a secure secret key
+print("Secret Key:", os.environ.get('SECRET_KEY'))  # Add this to check if the key is loaded
 
 logger = get_logger(__name__)
 
@@ -32,10 +44,34 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['STATIC_FOLDER'], exist_ok=True)
 os.makedirs(app.config['SESSION_FOLDER'], exist_ok=True)
 
+
+# **User Authentication Setup**
+
+# User model
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+        # You can add more attributes if needed
+
+# In-memory user store (for demonstration purposes)
+users = {
+    'admin': {
+        'password': generate_password_hash('foo')  # Replace with your desired password
+    }
+}
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id in users:
+        return User(user_id)
+    return None
+
 # Initialize global variables
 RAG_models = {}  # Dictionary to store RAG models per session
 app.config['INITIALIZATION_DONE'] = False  # Flag to track initialization
 logger.info("Application started.")
+
+
 
 def load_rag_model_for_session(session_id):
     """
@@ -82,12 +118,41 @@ def make_session_permanent():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
 
+# **Login and Logout Routes**
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        user_record = users.get(username)
+        if user_record and check_password_hash(user_record['password'], password):
+            user = User(username)
+            login_user(user)
+            flash('Logged in successfully.', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('chat'))
+        else:
+            flash('Invalid username or password.', 'danger')
+            return render_template('login.html')
+    else:
+        return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
 
 @app.route('/', methods=['GET'])
+@login_required
 def home():
     return redirect(url_for('chat'))
 
 @app.route('/chat', methods=['GET', 'POST'])
+@login_required
 def chat():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
@@ -211,6 +276,10 @@ def chat():
                 logger.error(f"Error generating response: {e}")
                 return jsonify({"success": False, "message": f"An error occurred while generating the response: {str(e)}"})
 
+    # Retrieve the indexer_model from session
+    indexer_model = session.get('indexer_model', 'vidore/colpali')
+
+
     # For GET requests, render the chat page
     session_files = os.listdir(app.config['SESSION_FOLDER'])
     chat_sessions = []
@@ -231,7 +300,11 @@ def chat():
                            resized_height=resized_height, resized_width=resized_width,
                            session_name=session_name, indexed_files=indexed_files)
 
+# **Additional Routes with @login_required Decorator**
+
+
 @app.route('/switch_session/<session_id>')
+@login_required
 def switch_session(session_id):
     session['session_id'] = session_id
     if session_id not in RAG_models:
@@ -240,6 +313,7 @@ def switch_session(session_id):
     return redirect(url_for('chat'))
 
 @app.route('/rename_session', methods=['POST'])
+@login_required
 def rename_session():
     session_id = request.form.get('session_id')
     new_session_name = request.form.get('new_session_name', 'Untitled Session')
@@ -259,6 +333,7 @@ def rename_session():
         return jsonify({"success": False, "message": "Session not found."})
 
 @app.route('/delete_session/<session_id>', methods=['POST'])
+@login_required
 def delete_session(session_id):
     try:
         session_file = os.path.join(app.config['SESSION_FOLDER'], f"{session_id}.json")
@@ -287,6 +362,7 @@ def delete_session(session_id):
         return jsonify({"success": False, "message": f"An error occurred while deleting the session: {str(e)}"})
 
 @app.route('/settings', methods=['GET', 'POST'])
+@login_required
 def settings():
     if request.method == 'POST':
         indexer_model = request.form.get('indexer_model', 'vidore/colpali')
@@ -313,6 +389,7 @@ def settings():
                                resized_width=resized_width)
 
 @app.route('/new_session')
+@login_required
 def new_session():
     session_id = str(uuid.uuid4())
     session['session_id'] = session_id

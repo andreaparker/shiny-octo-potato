@@ -1,17 +1,13 @@
-Flask
+flask
+flask-login
+werkzeug
 byaldi
 torch
 torchvision
-google-generativeai
 openai
 docx2pdf
 qwen-vl-utils
-vllm>=0.6.1.post1; sys_platform != 'darwin'
-mistral_common>=1.4.1
+#vllm>=0.6.1.post1; sys_platform != 'darwin' # install via `install_vllm.py` script
 einops
-mistral_common[opencv]
-mistral_common
-mistral_inference
-groq
 markdown
 hf_transfer
