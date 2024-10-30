@@ -46,6 +46,12 @@
     <p>Generating response...</p>
 </div>
 
+<!-- Display current indexer model and generation model -->
+<div class="current-models mt-3">
+    <p><strong>Current Indexer Model:</strong> {{ session.get('indexer_model', 'vidore/colpali') }}</p>
+    <p><strong>Current Generation Model:</strong> {{ session.get('generation_model', 'default_generation_model') }}</p>
+</div>
+
 <!-- Modal for indexing -->
 <div class="modal fade" id="indexingModal" tabindex="-1" aria-labelledby="indexingModalLabel" aria-hidden="true">
     <div class="modal-dialog">

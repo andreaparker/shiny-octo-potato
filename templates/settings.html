@@ -11,8 +11,9 @@
             <label for="indexer_model" class="form-label">Select Indexer Model:</label>
             <select name="indexer_model" class="form-select" id="indexer_model">
                 <option value="vidore/colpali" {% if indexer_model == 'vidore/colpali' %}selected{% endif %}>vidore/colpali</option>
+                <option value="vidore/colpali-v1.1" {% if indexer_model == 'vidore/colpali-v1.1' %}selected{% endif %}>vidore/colpali-v1.1</option>
                 <option value="vidore/colpali-v1.2" {% if indexer_model == 'vidore/colpali-v1.2' %}selected{% endif %}>vidore/colpali-v1.2</option>
-                <!-- <option value="vidore/colqwen2-v0.1" {% if indexer_model == 'vidore/colqwen2-v0.1' %}selected{% endif %}>vidore/colqwen2-v0.1</option> -->
+                <option value="vidore/colqwen2-v0.1" {% if indexer_model == 'vidore/colqwen2-v0.1' %}selected{% endif %}>vidore/colqwen2-v0.1</option>
             </select>
         </div>
 
@@ -20,7 +21,7 @@
         <div class="mb-4">
             <label for="generation_model" class="form-label">Select Generation Model:</label>
             <select name="generation_model" class="form-select" id="generation_model">
-                <!-- <option value="qwen" {% if generation_model == 'qwen' %}selected{% endif %}>Qwen2-VL-7B-Instruct</option> -->
+                <<option value="qwen" {% if generation_model == 'qwen' %}selected{% endif %}>Qwen2-VL-7B-Instruct</option>
                 <option value="gpt4" {% if generation_model == 'gpt4' %}selected{% endif %}>OpenAI GPT-4</option>
             </select>
         </div>

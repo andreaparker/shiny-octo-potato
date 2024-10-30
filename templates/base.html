@@ -29,7 +29,7 @@
                                 <i class="fas fa-plus-circle"></i>
                             </a>
                         </h6>
-                        <ul class="nav flex-column mb-2 session-list">
+                        <!-- <ul class="nav flex-column mb-2 session-list">
                             {% for session in chat_sessions %}
                                 <li class="nav-item d-flex justify-content-between align-items-center py-1 {% if session.id == current_session %}current-session{% endif %}">
                                     <a class="nav-link {% if session.id == current_session %}active{% endif %}" href="{{ url_for('switch_session', session_id=session.id) }}">
@@ -45,7 +45,26 @@
                                     </div>
                                 </li>
                             {% endfor %}
-                        </ul>
+                        </ul> -->
+                        <div class="session-list-container" style="max-height: 70vh; overflow-y: auto;">
+                            <ul class="nav flex-column mb-2 session-list">
+                                {% for session in chat_sessions %}
+                                    <li class="nav-item d-flex justify-content-between align-items-center py-1 {% if session.id == current_session %}current-session{% endif %}">
+                                        <a class="nav-link {% if session.id == current_session %}active{% endif %}" href="{{ url_for('switch_session', session_id=session.id) }}">
+                                            <span class="session-name" data-session-id="{{ session.id }}">{{ session.name }}</span>
+                                        </a>
+                                        <div class="session-options">
+                                            <i class="fas fa-ellipsis-h" data-session-id="{{ session.id }}"></i>
+                                            <div class="options-popup" id="options-{{ session.id }}">
+                                                <div class="option edit-session">Edit</div>
+                                                <div class="option delete-session">Delete</div>
+                                                <div class="option show-indexed-files">Indexed Files</div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </nav>
