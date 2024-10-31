@@ -1,7 +1,6 @@
 import os
 import uuid
 import json
-import time  # Add this import at the top of the file
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from markupsafe import Markup
 from models.indexer import index_documents
